@@ -26,7 +26,7 @@ if((is_int((int) $argv[1])) ) {
 
     #Statement de consulta
     if(count($argv) == 4) {
-        $stringConsulta .= " AND BETWEEN date(chamada.data_pendencia) '{$argv[0]}' AND '{$argv[1]}' ";
+        $stringConsulta .= " AND date(chamada.data_pendencia) between '{$argv[2]}' AND '{$argv[3]}' ";
     } else {
         $stringConsulta .= " AND date(chamada.data_pendencia) = CURDATE() ";
     }

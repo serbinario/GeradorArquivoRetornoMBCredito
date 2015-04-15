@@ -21,7 +21,7 @@ $stringConsulta = "select chamada.*, consulta.*, cliente.*, estadual.*, regional
             . " where consulta.status_arquivo_retorno != 1 AND chamada.status_chamada = 1 ";
 
 if(count($argv) == 2) {
-    $stringConsulta .= " AND BETWEEN date(chamada.data_pendencia) '{$argv[0]}' AND '{$argv[1]}' ";
+    $stringConsulta .= " AND date(chamada.data_pendencia) BETWEEN '{$argv[0]}' AND '{$argv[1]}' ";
 } else {
     $stringConsulta .= " AND date(chamada.data_pendencia) = CURDATE() ";
 }
