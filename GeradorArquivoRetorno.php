@@ -4,25 +4,37 @@ require_once './PDOConfig.php';
 #Instânciando a classe de conexão classe de conexão
 $conexao = new PDOConfig();
 
-#Statement de consulta
-$stm =  $conexao->prepare("select chamada.*, consulta.*, cliente.*, estadual.*, regional.*, agencia.* , estado.* from chamada_cliente chamada"
+#Data de hoje
+$hoje = new \DateTime("now");
+
+#String da consulta
+$stringConsulta = "select chamada.*, consulta.*, cliente.*, estadual.*, regional.*, agencia.* , estado.*, st.*, sub.* from chamada_cliente chamada"
             . " INNER JOIN consulta_cliente consulta on consulta.id = chamada.id_onsulta_cliente "
             . " INNER JOIN clientes cliente on cliente.id_cliente = consulta.clientes_id_cliente "
+            . " INNER JOIN status st on st.id_status = chamada.status_id_status "
+            . " INNER JOIN subrotinas sub on sub.id_subrotina = chamada.subrotinas_id_subrotina "
             //. " INNER JOIN limite_credito_novo limite on cliente.LimiteCreditoNovo = limite.id_limite_credito_novo "
             . " INNER JOIN super_estadual estadual on estadual.id_super_estadual = cliente.super_estadual_id_super_estadual "
             . " INNER JOIN super_regional regional on regional.id_super_regional = cliente.super_regional_id_super_regional "
             . " INNER JOIN ag agencia on agencia.id_ag = cliente.ag_id_ag "
             . " INNER JOIN uf estado on estado.id = agencia.id_uf "
-            . " where consulta.status_arquivo_retorno != 1 AND chamada.status_chamada = 1");
+            . " where consulta.status_arquivo_retorno != 1 AND chamada.status_chamada = 1 ";
+
+if(count($argv) == 2) {
+    $stringConsulta .= " AND BETWEEN date(chamada.data_pendencia) '{$argv[0]}' AND '{$argv[1]}' ";
+} else {
+    $stringConsulta .= " AND date(chamada.data_pendencia) = CURDATE() ";
+}
+
+
+#Statement de consulta
+$stm =  $conexao->prepare($stringConsulta);
 
 #Executendo a consulta
 $stm->execute();
 
 #Recuperando todos os dados do resultado
 $result = $stm->fetchAll(PDO::FETCH_ASSOC);
-
-#Data de hoje
-$hoje = new \DateTime("now");
 
 #Arquivo de retorno
 $file_path = "arquivo_retorno_{$hoje->format("dmYHis")}.csv";  
@@ -58,7 +70,9 @@ for($i = 0; $i < count($result); $i++) {
     $stringRetorno .= "{$result[$i]['num_beneficio_cliente']};";
     $stringRetorno .= "{$result[$i]['dv_cliente']};";
     $stringRetorno .= "{$result[$i]['data_nasc_cliente']};";
-    $stringRetorno .= "{$result[$i]['num_beneficio_comp_cliente']};";        
+    $stringRetorno .= "{$result[$i]['num_beneficio_comp_cliente']};"; 
+    $stringRetorno .= utf8_encode("{$result[$i]['status']};"); 
+    $stringRetorno .= utf8_encode("{$result[$i]['subrotina']};"); 
     $stringRetorno  = substr($stringRetorno, 0, -1);
     $stringRetorno .= "\n";
 }
